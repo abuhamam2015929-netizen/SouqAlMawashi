@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     namespace 'com.ahmed.souqalmawashi'
@@ -60,11 +61,10 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1"
     implementation "io.coil-kt:coil-compose:2.6.0"
 
-    // ملاحظة: مكتبات Firebase ستُضاف هنا لاحقًا خطوة بخطوة
-    // implementation platform('com.google.firebase:firebase-bom:33.1.0')
-    // implementation 'com.google.firebase:firebase-firestore-ktx'
-    // implementation 'com.google.firebase:firebase-storage-ktx'
-    // implementation 'com.google.firebase:firebase-auth-ktx'
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.1.0')
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation 'com.google.firebase:firebase-storage-ktx'
 
     debugImplementation "androidx.compose.ui:ui-tooling"
 }
