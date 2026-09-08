@@ -1,16 +1,12 @@
 package com.ahmed.souqalmawashi.ui
 
 import androidx.lifecycle.ViewModel
+import com.ahmed.souqalmawashi.data.FirestoreListingRepository
 import com.ahmed.souqalmawashi.data.ListingRepository
-import com.ahmed.souqalmawashi.data.MockListingRepository
 import com.ahmed.souqalmawashi.model.Listing
 
-/**
- * ViewModel وسيط بين الشاشات ومصدر البيانات.
- * لتبديل المصدر لاحقًا إلى Firestore: غيّر repository هنا فقط.
- */
 class ListingViewModel(
-    private val repository: ListingRepository = MockListingRepository
+    private val repository: ListingRepository = FirestoreListingRepository
 ) : ViewModel() {
 
     val listings = repository.listings
