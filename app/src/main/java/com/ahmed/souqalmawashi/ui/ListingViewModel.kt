@@ -1,39 +1,19 @@
-package com.ahmed.souqalmawashi.data
+package com.ahmed.souqalmawashi.ui
 
+import androidx.lifecycle.ViewModel
+import com.ahmed.souqalmawashi.data.FirestoreListingRepository
+import com.ahmed.souqalmawashi.data.ListingRepository
 import com.ahmed.souqalmawashi.model.Listing
-import com.ahmed.souqalmawashi.model.ListingStatus
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
-object FirestoreListingRepository : ListingRepository {
+class ListingViewModel(
+    private val repository: ListingRepository = FirestoreListingRepository
+) : ViewModel() {
 
-    private val db = FirebaseFirestore.getInstance()
-    private val collection = db.collection("listings")
+    val listings = repository.listings
 
-    private val _listings = MutableStateFlow<List<Listing>>(emptyList())
-    override val listings: StateFlow<List<Listing>> = _listings.asStateFlow()
+    fun addListing(listing: Listing) = repository.addListing(listing)
 
-    init {
-        collection
-            .whereEqualTo("status", ListingStatus.ACTIVE.name)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) return@addSnapshotListener
-                _listings.value = snapshot.documents
-                    .mapNotNull { it.toObject(Listing::class.java) }
-                    .sortedByDescending { it.createdAt }
-            }
-    }
+    fun deleteListing(id: String) = repository.deleteListing(id)
 
-    override fun addListing(listing: Listing) {
-        collection.document(listing.id).set(listing)
-    }
-
-    override fun deleteListing(id: String) {
-        collection.document(id).delete()
-    }
-
-    override fun getListingById(id: String): Listing? =
-        _listings.value.find { it.id == id }
+    fun getListingById(id: String): Listing? = repository.getListingById(id)
 }
