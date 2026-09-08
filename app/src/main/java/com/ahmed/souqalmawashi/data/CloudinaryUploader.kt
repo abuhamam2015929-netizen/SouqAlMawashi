@@ -15,8 +15,8 @@ import java.io.FileOutputStream
 
 object CloudinaryUploader {
 
-    private const val CLOUD_NAME = "ضع_اسم_الحساب_هنا"
-    private const val UPLOAD_PRESET = "ضع_اسم_البريست_هنا"
+    private const val CLOUD_NAME = "dpnmoo9q"
+    private const val UPLOAD_PRESET = "souq_mawashi_preset"
 
     private val client = OkHttpClient()
 
