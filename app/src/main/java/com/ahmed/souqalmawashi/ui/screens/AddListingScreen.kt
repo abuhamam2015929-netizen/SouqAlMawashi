@@ -21,7 +21,7 @@ import java.util.UUID
 
 @Composable
 fun AddListingScreen(onListingAdded: () -> Unit) {
-    val context = LocalContext.value
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var title by remember { mutableStateOf("") }
@@ -29,7 +29,7 @@ fun AddListingScreen(onListingAdded: () -> Unit) {
     var location by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("إبل") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-    
+
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
