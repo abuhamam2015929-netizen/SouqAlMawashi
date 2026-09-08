@@ -15,31 +15,38 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.ahmed.souqalmawashi.data.CloudinaryUploader
-import com.google.firebase.firestore.FirebaseFirestore
+import com.ahmed.souqalmawashi.model.AnimalType
+import com.ahmed.souqalmawashi.model.Listing
+import com.ahmed.souqalmawashi.ui.ListingViewModel
 import kotlinx.coroutines.launch
-import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddListingScreen(onListingAdded: () -> Unit) {
+fun AddListingScreen(
+    viewModel: ListingViewModel,
+    onSaved: () -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var title by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("إبل") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var animalType by remember { mutableStateOf(AnimalType.SHEEP) }
+    var animalTypeExpanded by remember { mutableStateOf(false) }
 
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") } // نص فارغ = غير محدد
+    var governorate by remember { mutableStateOf("") }
+    var district by remember { mutableStateOf("") }
+    var contactPhone by remember { mutableStateOf("") }
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // منتقي الصور من المعرض
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) {
-            imageUri = uri
-        }
+        if (uri != null) imageUri = uri
     }
 
     Column(
@@ -52,26 +59,88 @@ fun AddListingScreen(onListingAdded: () -> Unit) {
         Text(text = "نشر إعلان جديد", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
+        // نوع الحيوان (قائمة منسدلة)
+        ExposedDropdownMenuBox(
+            expanded = animalTypeExpanded,
+            onExpandedChange = { animalTypeExpanded = it },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = animalType.arabicLabel,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("نوع الحيوان") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = animalTypeExpanded) },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = animalTypeExpanded,
+                onDismissRequest = { animalTypeExpanded = false }
+            ) {
+                AnimalType.entries.forEach { type ->
+                    DropdownMenuItem(
+                        text = { Text(type.arabicLabel) },
+                        onClick = {
+                            animalType = type
+                            animalTypeExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
-            label = { Text("عنوان الإعلان (مثلاً: جمل محلي)") },
+            label = { Text("عنوان الإعلان") },
             modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("الوصف") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = price,
-            onValueChange = { price = it },
-            label = { Text("السعر (ريال)") },
+            onValueChange = { price = it.filter { c -> c.isDigit() } },
+            label = { Text("السعر (اختياري)") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
 
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = district,
+                onValueChange = { district = it },
+                label = { Text("المديرية") },
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedTextField(
+                value = governorate,
+                onValueChange = { governorate = it },
+                label = { Text("المحافظة") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
         OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("الموقع (مثلاً: شبوة - بيحان)") },
+            value = contactPhone,
+            onValueChange = { contactPhone = it },
+            label = { Text("رقم واتساب للتواصل") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -88,9 +157,8 @@ fun AddListingScreen(onListingAdded: () -> Unit) {
         }
 
         Button(onClick = { imagePickerLauncher.launch("image/*") }) {
-            Text("اختر صورة الحيوان")
+            Text(if (imageUri == null) "اختر صورة الحيوان" else "تغيير الصورة")
         }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         if (errorMessage != null) {
@@ -100,8 +168,8 @@ fun AddListingScreen(onListingAdded: () -> Unit) {
 
         Button(
             onClick = {
-                if (title.isBlank() || price.isBlank() || imageUri == null) {
-                    errorMessage = "الرجاء تعبئة الحقول المطلوبة واختيار صورة"
+                if (title.isBlank() || governorate.isBlank() || district.isBlank() || contactPhone.isBlank()) {
+                    errorMessage = "الرجاء تعبئة عنوان الإعلان والمحافظة والمديرية ورقم واتساب"
                     return@Button
                 }
 
@@ -110,38 +178,31 @@ fun AddListingScreen(onListingAdded: () -> Unit) {
 
                 scope.launch {
                     try {
-                        // 1. رفع الصورة إلى Cloudinary والحصول على الرابط الآمن
-                        val uploadedImageUrl = CloudinaryUploader.uploadImage(context, imageUri!!)
+                        // 1. رفع الصورة إلى Cloudinary إن وُجدت
+                        val imageUrls: List<String> = if (imageUri != null) {
+                            listOf(CloudinaryUploader.uploadImage(context, imageUri!!))
+                        } else {
+                            emptyList()
+                        }
 
-                        // 2. تجهيز بيانات الإعلان لحفظها في Firestore
-                        val listingId = UUID.randomUUID().toString()
-                        val listingMap = hashMapOf(
-                            "id" to listingId,
-                            "title" to title,
-                            "price" to price.toDoubleOrNull(),
-                            "location" to location,
-                            "category" to category,
-                            "imageUrl" to uploadedImageUrl,
-                            "timestamp" to System.currentTimeMillis()
+                        // 2. بناء كائن الإعلان وحفظه عبر الـ ViewModel
+                        val listing = Listing(
+                            animalType = animalType,
+                            title = title,
+                            description = description,
+                            price = price.toLongOrNull() ?: 0L,
+                            imageUrls = imageUrls,
+                            governorate = governorate,
+                            district = district,
+                            contactPhone = contactPhone
                         )
+                        viewModel.addListing(listing)
 
-                        // 3. حفظ المستند في مجموعة "listings"
-                        FirebaseFirestore.getInstance()
-                            .collection("listings")
-                            .document(listingId)
-                            .set(listingMap)
-                            .addOnSuccessListener {
-                                isLoading = false
-                                onListingAdded() // العودة للرئيسية أو تحديث القائمة
-                            }
-                            .addOnFailureListener { e ->
-                                isLoading = false
-                                errorMessage = "فشل حفظ الإعلان: ${e.localizedMessage}"
-                            }
-
+                        isLoading = false
+                        onSaved()
                     } catch (e: Exception) {
                         isLoading = false
-                        errorMessage = "خطأ في الرفع: ${e.localizedMessage}"
+                        errorMessage = "خطأ في نشر الإعلان: ${e.localizedMessage}"
                     }
                 }
             },
@@ -149,7 +210,10 @@ fun AddListingScreen(onListingAdded: () -> Unit) {
             enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             } else {
                 Text("نشر الإعلان")
             }
