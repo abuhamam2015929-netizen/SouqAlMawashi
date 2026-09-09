@@ -65,6 +65,9 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.1.0')
     implementation 'com.google.firebase:firebase-firestore-ktx'
 
+    // Firebase Auth (لتسجيل الدخول المجهول Anonymous Auth — نفس الـ BOM أعلاه)
+    implementation 'com.google.firebase:firebase-auth-ktx'
+
     // رفع الصور عبر Cloudinary (بديل مجاني بدون بطاقة بنكية)
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
