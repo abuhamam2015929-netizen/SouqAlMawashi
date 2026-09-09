@@ -11,7 +11,8 @@ class ListingViewModel(
 
     val listings = repository.listings
 
-    fun addListing(listing: Listing) = repository.addListing(listing)
+    fun addListing(listing: Listing, onResult: (Result<Unit>) -> Unit = {}) =
+        repository.addListing(listing, onResult)
 
     fun deleteListing(id: String) = repository.deleteListing(id)
 
