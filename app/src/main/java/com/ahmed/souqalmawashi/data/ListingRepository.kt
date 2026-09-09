@@ -6,19 +6,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/**
- * واجهة مصدر بيانات الإعلانات.
- *
- * حاليًا: [MockListingRepository] تنفيذ وهمي بالذاكرة فقط، للتطوير والتجربة
- * بدون الحاجة لإعداد Firebase الآن.
- *
- * الخطوة القادمة (عندما نجهز Firebase Firestore + Storage خطوة بخطوة):
- * ننشئ FirestoreListingRepository يطبّق نفس الواجهة بالضبط،
- * ونستبدلها في MainActivity بسطر واحد فقط دون تعديل أي شاشة.
- */
 interface ListingRepository {
     val listings: StateFlow<List<Listing>>
-    fun addListing(listing: Listing)
+
+    /**
+     * @param onResult يُستدعى بعد محاولة الحفظ: Result.success إذا نجح،
+     * أو Result.failure(exception) مع رسالة الخطأ الحقيقية إذا فشل (مثلاً رفض صلاحيات)
+     */
+    fun addListing(listing: Listing, onResult: (Result<Unit>) -> Unit = {})
+
     fun deleteListing(id: String)
     fun getListingById(id: String): Listing?
 }
@@ -75,8 +71,9 @@ object MockListingRepository : ListingRepository {
     private val _listings = MutableStateFlow(sampleData)
     override val listings: StateFlow<List<Listing>> = _listings.asStateFlow()
 
-    override fun addListing(listing: Listing) {
+    override fun addListing(listing: Listing, onResult: (Result<Unit>) -> Unit) {
         _listings.value = listOf(listing) + _listings.value
+        onResult(Result.success(Unit))
     }
 
     override fun deleteListing(id: String) {
