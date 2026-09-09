@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.ahmed.souqalmawashi.ui.ListingViewModel
+import com.ahmed.souqalmawashi.util.ReportHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,10 +80,10 @@ fun ListingDetailScreen(
             Spacer(Modifier.height(8.dp))
 
             OutlinedButton(
-                onClick = { /* TODO: نموذج إبلاغ بسيط في الإصدار القادم */ },
+                onClick = { ReportHelper.reportListing(context, listing) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("الإبلاغ عن هذا الإعلان")
+                Text("🚩 الإبلاغ عن هذا الإعلان")
             }
         }
     }
