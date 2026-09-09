@@ -35,7 +35,7 @@ fun AddListingScreen(
 
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") } // نص فارغ = غير محدد
+    var price by remember { mutableStateOf("") }
     var governorate by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
     var contactPhone by remember { mutableStateOf("") }
@@ -172,6 +172,12 @@ fun AddListingScreen(
                     return@Button
                 }
 
+                val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+                if (currentUserId.isNullOrBlank()) {
+                    errorMessage = "تعذر التحقق من هويتك، تأكد من اتصالك بالإنترنت وأعد فتح التطبيق"
+                    return@Button
+                }
+
                 isLoading = true
                 errorMessage = null
 
@@ -182,9 +188,6 @@ fun AddListingScreen(
                         } else {
                             emptyList()
                         }
-
-                        // معرّف الجهاز الحالي (مجهول لكن ثابت) — يُستخدم لملكية الإعلان
-                        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
                         val listing = Listing(
                             userId = currentUserId,
@@ -197,13 +200,18 @@ fun AddListingScreen(
                             district = district,
                             contactPhone = contactPhone
                         )
-                        viewModel.addListing(listing)
 
-                        isLoading = false
-                        onSaved()
+                        viewModel.addListing(listing) { result ->
+                            isLoading = false
+                            result
+                                .onSuccess { onSaved() }
+                                .onFailure { e ->
+                                    errorMessage = "فشل حفظ الإعلان في الخادم: ${e.localizedMessage}"
+                                }
+                        }
                     } catch (e: Exception) {
                         isLoading = false
-                        errorMessage = "خطأ في نشر الإعلان: ${e.localizedMessage}"
+                        errorMessage = "خطأ في رفع الصورة: ${e.localizedMessage}"
                     }
                 }
             },
