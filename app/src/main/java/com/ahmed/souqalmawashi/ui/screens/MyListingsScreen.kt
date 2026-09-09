@@ -13,14 +13,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ahmed.souqalmawashi.ui.ListingViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyListingsScreen(viewModel: ListingViewModel) {
     val listings by viewModel.listings.collectAsState()
-    // في نسخة MVP الحالية: نعرض كل الإعلانات كـ "إعلاناتي" لعدم وجود نظام تسجيل دخول بعد.
-    // بعد إضافة Firebase Auth: نفلتر حسب userId == المستخدم الحالي.
-    val myListings = listings
+
+    // معرّف الجهاز الحالي (من Anonymous Auth) — نعرض فقط إعلانات هذا الجهاز
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    val myListings = listings.filter { it.userId == currentUserId }
 
     Scaffold(topBar = { TopAppBar(title = { Text("إعلاناتي") }) }) { padding ->
         if (myListings.isEmpty()) {
