@@ -26,9 +26,7 @@ object FirestoreListingRepository : ListingRepository {
             }
     }
 
-    override fun addListing(listing: Listing) {
-        // إذا ما فيه id محدد مسبقاً (الحالة الطبيعية عند إضافة إعلان جديد)،
-        // نولّد معرّف جديد من Firestore بدل استخدام مسار فارغ
+    override fun addListing(listing: Listing, onResult: (Result<Unit>) -> Unit) {
         val docRef = if (listing.id.isBlank()) {
             collection.document()
         } else {
@@ -36,7 +34,14 @@ object FirestoreListingRepository : ListingRepository {
         }
 
         val listingWithId = listing.copy(id = docRef.id)
+
         docRef.set(listingWithId)
+            .addOnSuccessListener {
+                onResult(Result.success(Unit))
+            }
+            .addOnFailureListener { e ->
+                onResult(Result.failure(e))
+            }
     }
 
     override fun deleteListing(id: String) {
