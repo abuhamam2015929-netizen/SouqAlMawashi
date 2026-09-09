@@ -18,6 +18,7 @@ import com.ahmed.souqalmawashi.data.CloudinaryUploader
 import com.ahmed.souqalmawashi.model.AnimalType
 import com.ahmed.souqalmawashi.model.Listing
 import com.ahmed.souqalmawashi.ui.ListingViewModel
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +60,6 @@ fun AddListingScreen(
         Text(text = "نشر إعلان جديد", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // نوع الحيوان (قائمة منسدلة)
         ExposedDropdownMenuBox(
             expanded = animalTypeExpanded,
             onExpandedChange = { animalTypeExpanded = it },
@@ -145,7 +145,6 @@ fun AddListingScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // معاينة الصورة المختارة
         if (imageUri != null) {
             Image(
                 painter = rememberAsyncImagePainter(imageUri),
@@ -178,15 +177,17 @@ fun AddListingScreen(
 
                 scope.launch {
                     try {
-                        // 1. رفع الصورة إلى Cloudinary إن وُجدت
                         val imageUrls: List<String> = if (imageUri != null) {
                             listOf(CloudinaryUploader.uploadImage(context, imageUri!!))
                         } else {
                             emptyList()
                         }
 
-                        // 2. بناء كائن الإعلان وحفظه عبر الـ ViewModel
+                        // معرّف الجهاز الحالي (مجهول لكن ثابت) — يُستخدم لملكية الإعلان
+                        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
                         val listing = Listing(
+                            userId = currentUserId,
                             animalType = animalType,
                             title = title,
                             description = description,
